@@ -1,0 +1,2 @@
+1. Zero-Shot Prompting:
+The model receives only instructions, no examples
