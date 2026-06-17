@@ -7,6 +7,7 @@ client = OpenAI()
 # Send request to GPT model
 response = client.chat.completions.create(
     model="gpt-4o",
+    temperature=4.5,
 
     messages=[
         {
@@ -42,3 +43,6 @@ response = client.chat.completions.create(
 
 # Print the AI response
 print(response.choices[0].message.content)
+
+def greet():
+ print("hello india")

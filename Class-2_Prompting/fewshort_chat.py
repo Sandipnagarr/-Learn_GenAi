@@ -12,8 +12,9 @@ response = client.chat.completions.create(
     # Conversation messages sent to the model
     messages=[
         {
-            "role": "user",
-            "content": """
+            
+"role": "user",
+"content": """
 Input: Apple
 Output: Fruit
 
@@ -23,9 +24,7 @@ Output: Vegetable
 Input: Mango
 Output:
 """
-        }
-    ]
-)
+}])
 
 # Extract and print the model's response
 # The model learns the pattern:

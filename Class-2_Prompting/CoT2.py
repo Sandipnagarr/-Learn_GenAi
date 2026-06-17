@@ -1,182 +1,277 @@
-# -------------------------------------------------------------
-# Import required libraries
-# -------------------------------------------------------------
+# # -------------------------------------------------------------
+# # Import required libraries
+# # -------------------------------------------------------------
 
+# from dotenv import load_dotenv
+# from openai import OpenAI
+# import json
+
+# # -------------------------------------------------------------
+# # Load environment variables from .env file
+# # This loads OPENAI_API_KEY into the environment
+# # -------------------------------------------------------------
+
+# load_dotenv()
+
+# # -------------------------------------------------------------
+# # Create OpenAI client
+# # The SDK automatically reads OPENAI_API_KEY
+# # -------------------------------------------------------------
+
+# client = OpenAI()
+
+# # -------------------------------------------------------------
+# # SYSTEM PROMPT
+# #
+# # This prompt forces the model to:
+# # 1. Think step-by-step
+# # 2. Return JSON only
+# # 3. Follow a fixed reasoning workflow
+# #
+# # Workflow:
+# # analyse -> think -> validate -> result
+# # -------------------------------------------------------------
+
+# SYSTEM_PROMPT = """
+# You are a helpful AI assistant specialized in solving user queries.
+
+# For every user query:
+
+# 1. Analyse the problem
+# 2. Think about the solution
+# 3. Validate the reasoning
+# 4. Produce the final result
+
+# Return ONLY valid JSON.
+
+# Format:
+# {
+#     "step": "string",
+#     "content": "string"
+# }
+
+# Possible step values:
+# - analyse
+# - think
+# - validate
+# - result
+# """
+
+# # -------------------------------------------------------------
+# # Conversation history
+# #
+# # Chat models are stateless.
+# # Therefore we must keep track of all messages manually.
+# # -------------------------------------------------------------
+
+# messages = [
+#     {
+#         "role": "system",
+#         "content": SYSTEM_PROMPT
+#     }
+# ]
+
+# # -------------------------------------------------------------
+# # Get user input
+# # -------------------------------------------------------------
+
+# query = input("> ")
+
+# messages.append(
+#     {
+#         "role": "user",
+#         "content": query
+#     }
+# )
+
+# # -------------------------------------------------------------
+# # Main Agent Loop
+# #
+# # This loop continues until the model returns:
+# #
+# # {
+# #   "step":"result"
+# # }
+# #
+# # -------------------------------------------------------------
+
+# while True:
+
+#     # ---------------------------------------------------------
+#     # Call OpenAI Model
+#     #
+#     # response_format ensures JSON output
+#     # ---------------------------------------------------------
+
+#     response = client.chat.completions.create(
+#         model="gpt-4.1",
+#         response_format={"type": "json_object"},
+#         messages=messages
+#     )
+
+#     # ---------------------------------------------------------
+#     # Extract model output
+#     # ---------------------------------------------------------
+
+#     assistant_reply = response.choices[0].message.content
+
+#     # Store response in chat history
+#     messages.append(
+#         {
+#             "role": "assistant",
+#             "content": assistant_reply
+#         }
+#     )
+
+#     # Convert JSON string into Python dictionary
+#     parsed_response = json.loads(assistant_reply)
+
+#     step = parsed_response.get("step")
+#     content = parsed_response.get("content")
+
+#     # ---------------------------------------------------------
+#     # THINK STEP
+#     #
+#     # Here you could call another model
+#     # (Claude, Gemini, DeepSeek, etc.)
+#     #
+#     # Then append validation result back into chat history.
+#     # ---------------------------------------------------------
+
+#     if step == "think":
+
+#         print("🧠 THINKING:", content)
+
+#         # Example placeholder validation
+#         validation = {
+#             "step": "validate",
+#             "content": "External validation completed."
+#         }
+
+#         messages.append(
+#             {
+#                 "role": "assistant",
+#                 "content": json.dumps(validation)
+#             }
+#         )
+
+#         continue
+
+#     # ---------------------------------------------------------
+#     # Intermediate Steps
+#     #
+#     # analyse
+#     # validate
+#     # ---------------------------------------------------------
+
+#     if step != "result":
+
+#         print("🧠", content)
+
+#         continue
+
+#     # ---------------------------------------------------------
+#     # Final Result
+#     # ---------------------------------------------------------
+
+#     print("🤖", content)
+
+#     break
 from dotenv import load_dotenv
 from openai import OpenAI
 import json
 
-# -------------------------------------------------------------
-# Load environment variables from .env file
-# This loads OPENAI_API_KEY into the environment
-# -------------------------------------------------------------
-
 load_dotenv()
-
-# -------------------------------------------------------------
-# Create OpenAI client
-# The SDK automatically reads OPENAI_API_KEY
-# -------------------------------------------------------------
 
 client = OpenAI()
 
-# -------------------------------------------------------------
-# SYSTEM PROMPT
-#
-# This prompt forces the model to:
-# 1. Think step-by-step
-# 2. Return JSON only
-# 3. Follow a fixed reasoning workflow
-#
-# Workflow:
-# analyse -> think -> validate -> result
-# -------------------------------------------------------------
+# Chain Of Thought: The model is encouraged to break down reasoning step by step before arriving at an answer.
 
 SYSTEM_PROMPT = """
-You are a helpful AI assistant specialized in solving user queries.
+    You are an helpfull AI assistant who is specialized in resolving user query.
+    For the given user input, analyse the input and break down the problem step by step.
 
-For every user query:
+    The steps are you get a user input, you analyse, you think, you think again, and think for several times and then return the output with an explanation. 
 
-1. Analyse the problem
-2. Think about the solution
-3. Validate the reasoning
-4. Produce the final result
+    Follow the steps in sequence that is "analyse", "think", "output", "validate" and finally "result".
 
-Return ONLY valid JSON.
+    Rules:
+    1. Follow the strict JSON output as per schema.
+    2. Always perform one step at a time and wait for the next input.
+    3. Carefully analyse the user query,
 
-Format:
-{
-    "step": "string",
-    "content": "string"
-}
+    Output Format:
+    {{ "step": "string", "content": "string" }}
 
-Possible step values:
-- analyse
-- think
-- validate
-- result
+    Example:
+    Input: What is 2 + 2
+    Output: {{ "step": "analyse", "content": "Alight! The user is interest in maths query and he is asking a basic arthematic operation" }}
+    Output: {{ "step": "think", "content": "To perform this addition, I must go from left to right and add all the operands." }}
+    Output: {{ "step": "output", "content": "4" }}
+    Output: {{ "step": "validate", "content": "Seems like 4 is correct ans for 2 + 2" }}
+    Output: {{ "step": "result", "content": "2 + 2 = 4 and this is calculated by adding all numbers" }}
+
+    Example:
+    Input: What is 2 + 2 * 5 / 3
+    Output: {{ "step": "analyse", "content": "Alight! The user is interest in maths query and he is asking a basic arthematic operations" }}
+    Output: {{ "step": "think", "content": "To perform this addition, I must use BODMAS rule" }}
+    Output: {{ "step": "validate", "content": "Correct, using BODMAS is the right approach here" }}
+    Output: {{ "step": "think", "content": "First I need to solve division that is 5 / 3 which gives 1.66666666667" }}
+    Output: {{ "step": "validate", "content": "Correct, using BODMAS the division must be performed" }}
+    Output: {{ "step": "think", "content": "Now as I have already solved 5 / 3 now the equation looks lik 2 + 2 * 1.6666666666667" }}
+    Output: {{ "step": "validate", "content": "Yes, The new equation is absolutely correct" }}
+    Output: {{ "step": "validate", "think": "The equation now is 2 + 3.33333333333" }}
+    and so on.....
+
 """
 
-# -------------------------------------------------------------
-# Conversation history
-#
-# Chat models are stateless.
-# Therefore we must keep track of all messages manually.
-# -------------------------------------------------------------
-
-messages = [
-    {
-        "role": "system",
-        "content": SYSTEM_PROMPT
-    }
-]
-
-# -------------------------------------------------------------
-# Get user input
-# -------------------------------------------------------------
-
-query = input("> ")
-
-messages.append(
-    {
-        "role": "user",
-        "content": query
-    }
+response = client.chat.completions.create(
+    model="gpt-4.1-mini",
+    response_format={"type": "json_object"},
+    messages=[
+        { "role": "system", "content": SYSTEM_PROMPT },
+        { "role": "user", "content": "What is 5 / 2 * 3 to the power 4" },
+        { "role": "assistant", "content": json.dumps({ "step": "analyse", "content": "The user is asking to calculate the value of the expression 5 divided by 2, multiplied by 3 raised to the power of 4." })  },
+        { "role": "assistant", "content": json.dumps({"step": "think", "content": "According to the order of operations (PEMDAS/BODMAS), I need to calculate the exponent first: 3 to the power 4. Then I perform the division 5/2. Finally, I multiply the results."})  },
+        { "role": "assistant", "content": json.dumps({"step": "output", "content": "3 to the power 4 equals 81, 5 divided by 2 equals 2.5, and 2.5 multiplied by 81 equals 202.5"})  },
+        { "role": "assistant", "content": json.dumps({"step": "validate", "content": "Double-checking the calculations: 3^4 = 81 is correct, 5/2 = 2.5 is correct, and 2.5 * 81 = 202.5 is also correct."})  },
+        { "role": "assistant", "content": json.dumps({"step": "result", "content": "The value of the expression 5 / 2 * 3^4 is 202.5, computed by first calculating 3^4 = 81, then dividing 5 by 2 to get 2.5, and multiplying 2.5 by 81."})  },
+        
+    ]
 )
 
-# -------------------------------------------------------------
-# Main Agent Loop
-#
-# This loop continues until the model returns:
-#
-# {
-#   "step":"result"
-# }
-#
-# -------------------------------------------------------------
+print("\n\n🤖:", response.choices[0].message.content, "\n\n")
+
+
+messages = [
+    { "role": "system", "content": SYSTEM_PROMPT }
+]
+
+query = input("> ")
+messages.append({ "role": "user", "content": query })
 
 while True:
-
-    # ---------------------------------------------------------
-    # Call OpenAI Model
-    #
-    # response_format ensures JSON output
-    # ---------------------------------------------------------
-
     response = client.chat.completions.create(
         model="gpt-4.1",
         response_format={"type": "json_object"},
         messages=messages
     )
 
-    # ---------------------------------------------------------
-    # Extract model output
-    # ---------------------------------------------------------
+    messages.append({ "role": "assistant", "content": response.choices[0].message.content })
+    parsed_response = json.loads(response.choices[0].message.content)
 
-    assistant_reply = response.choices[0].message.content
-
-    # Store response in chat history
-    messages.append(
-        {
-            "role": "assistant",
-            "content": assistant_reply
-        }
-    )
-
-    # Convert JSON string into Python dictionary
-    parsed_response = json.loads(assistant_reply)
-
-    step = parsed_response.get("step")
-    content = parsed_response.get("content")
-
-    # ---------------------------------------------------------
-    # THINK STEP
-    #
-    # Here you could call another model
-    # (Claude, Gemini, DeepSeek, etc.)
-    #
-    # Then append validation result back into chat history.
-    # ---------------------------------------------------------
-
-    if step == "think":
-
-        print("🧠 THINKING:", content)
-
-        # Example placeholder validation
-        validation = {
-            "step": "validate",
-            "content": "External validation completed."
-        }
-
-        messages.append(
-            {
-                "role": "assistant",
-                "content": json.dumps(validation)
-            }
-        )
-
+    if parsed_response.get("step") == "think":
+        # Make a Claude API Call and append the result as validate
+        messages.append({ "role": "assistant", "content": "<>" })
         continue
 
-    # ---------------------------------------------------------
-    # Intermediate Steps
-    #
-    # analyse
-    # validate
-    # ---------------------------------------------------------
-
-    if step != "result":
-
-        print("🧠", content)
-
+    if parsed_response.get("step") != "result":
+        print("          🧠:", parsed_response.get("content"))
         continue
 
-    # ---------------------------------------------------------
-    # Final Result
-    # ---------------------------------------------------------
-
-    print("🤖", content)
-
+    print("🤖:", parsed_response.get("content"))
     break
+
 
 
 '''User Input
