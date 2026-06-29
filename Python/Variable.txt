@@ -1,1 +1,110 @@
-name='sandip'
+1.assigning same value 
+x,y,z=10
+
+2.assigning multiple value
+x, y, z = 10, 20, 30
+
+3.type conversion 
+age = "22"
+age = int(age) 
+
+
+4. How are variables stored conceptually in memory?
+
+Unlike languages such as C, a Python variable does not store the value itself. Instead, it stores a reference to an object.
+
+Step 1: Create an object
+x = 10
+
+Conceptually, Python does this:
+
+Memory
++----------------+
+|  Integer 10    |
++----------------+
+
+Then it creates a variable that points to that object
+
+Variable
+   x
+   │
+   ▼
++----------------+
+|  Integer 10    |
++----------------+
+
+So:
+
+x is the variable (reference)
+10 is the object
+
+++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
+Step 2: Another variable points to the same object
+x = 10
+y = x
+
+Memory:
+
+      x
+      │
+      ▼
++----------------+
+|  Integer 10    |
++----------------+
+      ▲
+      │
+      y
+
+Both x and y refer to the same object.
+
+Check it:
+
+x = 10
+y = x
+
+print(id(x))
+print(id(y))
+
+Output (example):
+
+1402838472
+1402838472
+
+Python Topic 2: Numeric Data Types
+type checking
+
+x = 100
+print(type(x))
+
+memory reference
+a=10
+b=a
+a ─┐
+   │
+   ▼
++------+
+|  10  |
++------+
+   ▲
+   │
+b ─┘
+
+type conversion
+
+x = 10
+print(float(x))
+
+====inbuild Numeric functions=======
+abs(-10)
+
+round(3.456, 2)
+
+pow(2, 5)
+
+min(1, 5, 3)
+
+max(1, 5, 3)
+
+sum([1, 2, 3])
+
+divmod(10, 3)
