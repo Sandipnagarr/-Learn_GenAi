@@ -1,56 +1,20 @@
+import os
+
 from dotenv import load_dotenv
-from openai import OpenAI
+from google import genai
 
-load_dotenv()
+load_dotenv(override=True)
 
-client = OpenAI()
+api_key = os.getenv("GEMINI_API_KEY")
 
-text = "Eiffel Tower is in Paris and is a famous landmark, it is 324 meters tall"
+client = genai.Client(api_key=api_key)
 
-response = client.embeddings.create(
-    input=text,
-    model="text-embedding-3-small"
-)
+text = "You are a developer"
 
-print("Vector Embedding:")
-print(response.data[0].embedding)
+response = client.models.embed_content(model="gemini-embedding-001", contents=text)
 
-# ==========================================
-# EMBEDDING GENERATION ALGORITHM
-# ==========================================
+embedding = response.embeddings[0].values
 
-# Step 1: Load environment variables from .env file
-
-# Step 2: Create OpenAI client
-
-# Step 3: Take input text from user/application
-
-# Step 4: Send text to embedding model
-#         (text-embedding-3-small)
-
-# Step 5: Model tokenizes the text
-
-# Step 6: Tokens are converted into token IDs
-
-# Step 7: Token IDs pass through Transformer layers
-
-# Step 8: Transformer generates a dense vector
-#         representation (Embedding)
-
-# Step 9: Receive embedding vector response
-
-# Step 10: Print/store embedding vector
-#==============================================================================
-'''Input Text
-     ↓
-Tokenization
-     ↓
-Token IDs
-     ↓
-Embedding Model
-     ↓
-Transformer Layers
-     ↓
-Vector Embedding
-     ↓
-Output Vector'''
+print("Text:", text)
+print("Vector dimensions:", len(embedding))
+print("Embedding:", embedding)
